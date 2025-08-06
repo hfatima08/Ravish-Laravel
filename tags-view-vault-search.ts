@@ -29,6 +29,12 @@ export class TagCards extends StateMixin(LitElement) {
     @state()
     private _filterShowing: boolean = false;
 
+    @state()
+    private _searchValue: string = "";
+
+    @property()
+    selectedTag: string | null = null;
+
     @query("#filterInput")
     private _filterInput: any;
 
@@ -38,8 +44,6 @@ export class TagCards extends StateMixin(LitElement) {
 
     private _updateTagCards() {
         const tagCounts = new Map<string, number>();
-        
-        // Count items for each tag across all vaults
         for (const vault of this.state.vaults) {
             for (const item of vault.items) {
                 for (const tag of item.tags) {
@@ -47,13 +51,10 @@ export class TagCards extends StateMixin(LitElement) {
                 }
             }
         }
-
-        // Convert to array and sort alphabetically
         this._tagCards = Array.from(tagCounts.entries())
             .map(([name, count]) => ({ name, count }))
             .sort((a, b) => a.name.localeCompare(b.name));
-        
-        this._filteredTagCards = [...this._tagCards];
+        this._filterTags();
     }
 
     private _onTagClick(tagName: string) {
@@ -68,30 +69,34 @@ export class TagCards extends StateMixin(LitElement) {
         this._filterShowing = true;
         await this.updateComplete;
         setTimeout(() => {
-            if (val && val !== this._filterInput.value) {
-                this._filterInput.value = val;
-                this._filterTags(val);
+            if (val && val !== this._searchValue) {
+                this._searchValue = val;
+                if (this._filterInput) this._filterInput.value = val;
+                this._filterTags();
+            } else if (this._filterInput) {
+                this._filterInput.value = this._searchValue;
             }
-            if (focus) {
+            if (focus && this._filterInput) {
                 this._filterInput.focus();
             }
         }, 100);
     }
 
     cancelSearch() {
-        if (this._filterInput?.value) {
-            this._filterInput.value = "";
-            this._filteredTagCards = [...this._tagCards];
-        }
+        this._searchValue = "";
         this._filterShowing = false;
+        if (this._filterInput) {
+            this._filterInput.value = "";
+        }
+        this._filterTags();
         this._filterInput?.blur();
     }
 
-    private _filterTags(searchTerm: string) {
-        if (!searchTerm.trim()) {
+    private _filterTags() {
+        if (!this._searchValue.trim()) {
             this._filteredTagCards = [...this._tagCards];
         } else {
-            const term = searchTerm.toLowerCase();
+            const term = this._searchValue.toLowerCase();
             this._filteredTagCards = this._tagCards.filter(tag => 
                 tag.name.toLowerCase().includes(term)
             );
@@ -100,8 +105,14 @@ export class TagCards extends StateMixin(LitElement) {
     }
 
     private _updateItems() {
-        const searchTerm = this._filterInput?.value || "";
-        this._filterTags(searchTerm);
+        this._searchValue = this._filterInput?.value || "";
+        this._filterTags();
+    }
+
+    private _onSearchInput(e: Event) {
+        const target = e.target as HTMLInputElement;
+        this._searchValue = target.value;
+        this._filterTags();
     }
 
     static styles = [
@@ -238,7 +249,7 @@ export class TagCards extends StateMixin(LitElement) {
     render() {
         const hasTags = this._tagCards.length > 0;
         const hasFilteredTags = this._filteredTagCards.length > 0;
-        const isSearching = this._filterShowing && this._filterInput?.value;
+        const isSearching = this._filterShowing && this._searchValue;
 
         if (!hasTags) {
             return html`

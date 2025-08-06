@@ -20,6 +20,9 @@ interface TagCard {
 
 @customElement("pl-tag-cards")
 export class TagCards extends StateMixin(LitElement) {
+    @property()
+    selectedTag: string = "";
+
     @state()
     private _tagCards: TagCard[] = [];
 
@@ -31,9 +34,6 @@ export class TagCards extends StateMixin(LitElement) {
 
     @state()
     private _searchValue: string = "";
-
-    @property()
-    selectedTag: string | null = null;
 
     @query("#filterInput")
     private _filterInput: any;
@@ -58,11 +58,13 @@ export class TagCards extends StateMixin(LitElement) {
     }
 
     private _onTagClick(tagName: string) {
-        this.dispatchEvent(new CustomEvent("tag-selected", { 
-            detail: { tag: tagName },
-            bubbles: true,
-            composed: true 
-        }));
+        this.dispatchEvent(
+            new CustomEvent("tag-selected", {
+                detail: { tagName },
+                bubbles: true,
+                composed: true,
+            })
+        );
     }
 
     async search(val?: string, focus = true) {
@@ -119,19 +121,111 @@ export class TagCards extends StateMixin(LitElement) {
         shared,
         css`
             :host {
-                display: flex;
-                flex-direction: column;
+                display: block;
                 height: 100%;
                 background: var(--color-background);
             }
 
             header {
-                overflow: visible;
-                --input-focus-color: transparent;
+                border-bottom: 1px solid var(--border-color);
+                background: var(--color-background);
             }
 
-            .header-icon {
-                height: 1.3em;
+            .content {
+                padding: 1em;
+            }
+
+            .tags-grid {
+                display: grid;
+                gap: 1em;
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            }
+
+            .tag-card {
+                display: flex;
+                align-items: center;
+                padding: 1em;
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                background: var(--color-background);
+            }
+
+            .tag-card:hover {
+                border-color: var(--color-highlight);
+                background: var(--color-shade-1);
+            }
+
+            .tag-card.selected {
+                border-color: var(--color-highlight);
+                background: var(--color-highlight);
+                color: var(--color-background);
+            }
+
+            .tag-icon {
+                margin-right: 0.8em;
+                font-size: 1.2em;
+            }
+
+            .tag-info {
+                flex: 1;
+            }
+
+            .tag-name {
+                font-weight: 500;
+                margin-bottom: 0.2em;
+            }
+
+            .tag-count {
+                font-size: 0.9em;
+                opacity: 0.7;
+            }
+
+            .no-tags {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100%;
+                padding: 2em;
+                text-align: center;
+            }
+
+            .no-tags-icon {
+                font-size: 4em;
+                margin-bottom: 1em;
+                opacity: 0.5;
+            }
+
+            .no-tags-text {
+                font-size: 1.2em;
+                margin-bottom: 0.5em;
+            }
+
+            .no-tags-subtext {
+                opacity: 0.7;
+            }
+
+            .no-results {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100%;
+                padding: 2em;
+                text-align: center;
+            }
+
+            .no-results-icon {
+                font-size: 4em;
+                margin-bottom: 1em;
+                opacity: 0.5;
+            }
+
+            .no-results-text {
+                font-size: 1.2em;
+                opacity: 0.7;
             }
 
             pl-input {
@@ -142,124 +236,6 @@ export class TagCards extends StateMixin(LitElement) {
 
             pl-input:focus-within {
                 border-color: var(--color-highlight);
-            }
-
-            .content {
-                flex: 1;
-                padding: 1em;
-                overflow-y: auto;
-            }
-
-            .tags-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-                gap: 1em;
-                padding: 0.5em;
-            }
-
-            .tag-card {
-                background: var(--color-background);
-                border: 1px solid var(--border-color);
-                border-radius: 8px;
-                padding: 1em;
-                cursor: pointer;
-                transition: all 0.2s ease;
-                display: flex;
-                align-items: center;
-                gap: 0.5em;
-            }
-
-            .tag-card:hover {
-                background: var(--color-shade-1);
-                border-color: var(--color-highlight);
-                transform: translateY(-2px);
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            }
-
-            .tag-icon {
-                color: var(--color-highlight);
-                font-size: 1.2em;
-            }
-
-            .tag-info {
-                flex: 1;
-                min-width: 0;
-            }
-
-            .tag-name {
-                font-weight: 500;
-                color: var(--color-foreground);
-                margin-bottom: 0.25em;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-            }
-
-            .tag-count {
-                font-size: 0.9em;
-                color: var(--color-shade-2);
-            }
-
-            .no-tags {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                height: 100%;
-                color: var(--color-shade-2);
-                text-align: center;
-                padding: 2em;
-            }
-
-            .no-tags-icon {
-                font-size: 4em;
-                margin-bottom: 1em;
-                opacity: 0.5;
-            }
-
-            .no-tags-text {
-                font-size: 1.1em;
-                margin-bottom: 0.5em;
-            }
-
-            .no-tags-subtext {
-                font-size: 0.9em;
-                opacity: 0.7;
-            }
-
-            .no-results {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                height: 100%;
-                color: var(--color-shade-2);
-                text-align: center;
-                padding: 2em;
-            }
-
-            .no-results-icon {
-                font-size: 4em;
-                margin-bottom: 1em;
-                opacity: 0.5;
-            }
-
-            .no-results-text {
-                font-size: 1.1em;
-                margin-bottom: 0.5em;
-            }
-
-            .no-results-subtext {
-                font-size: 0.9em;
-                opacity: 0.7;
-            }
-
-            .lighten {
-                color: var(--watermark-text-color) !important;
-            }
-
-            .icon-size {
-                font-size: 500% !important;
             }
         `,
     ];
@@ -379,7 +355,10 @@ export class TagCards extends StateMixin(LitElement) {
                     <div class="content">
                         <div class="tags-grid">
                             ${this._filteredTagCards.map(tag => html`
-                                <div class="tag-card" @click=${() => this._onTagClick(tag.name)}>
+                                <div 
+                                    class="tag-card ${this.selectedTag === tag.name ? 'selected' : ''}" 
+                                    @click=${() => this._onTagClick(tag.name)}
+                                >
                                     <pl-icon icon="tag" class="tag-icon"></pl-icon>
                                     <div class="tag-info">
                                         <div class="tag-name">${tag.name}</div>
@@ -396,47 +375,85 @@ export class TagCards extends StateMixin(LitElement) {
 }
 
 @customElement("pl-tags-view")
-export class TagsView extends Routing(StateMixin(View)) {
+export class TagsView extends Routing(StateMixin(LitElement)) {
     routePattern = /^tags(?:\/([^\/]+))?/;
 
-    @property()
-    selectedTag: string | null = null;
-
-    @query("pl-items-list")
-    private _list: ItemsList;
+    @state()
+    private selectedTag: string = "";
 
     async handleRoute([tagName]: [string]) {
-        this.selectedTag = tagName || null;
-
-        if (this.active) {
-            if (tagName) {
-                // If a tag is selected, show items for that tag
-                this._list?.cancelSearch();
-            }
-        }
+        this.selectedTag = tagName || "";
     }
 
     private _onTagSelected(e: CustomEvent) {
-        const { tag } = e.detail;
-        router.go(`tags/${tag}`);
+        const tagName = e.detail.tagName;
+        this.selectedTag = tagName;
+        // Update the URL to reflect the selected tag
+        this.go(`tags/${tagName}`, undefined, undefined, true);
     }
 
     render() {
         return html`
-            <div class="fullbleed pane layout ${!!this.selectedTag ? "open" : ""}">
-                <pl-tag-cards 
-                    @tag-selected=${this._onTagSelected}
-                    ?hidden=${!!this.selectedTag}
-                ></pl-tag-cards>
-
-                <pl-items-list 
-                    .selected=${""} 
-                    .filter=${this.selectedTag ? { tag: this.selectedTag } : undefined}
-                    ?hidden=${!this.selectedTag}
-                ></pl-items-list>
-
-                <pl-item-view ?hidden=${!this.selectedTag}></pl-item-view>
+            <div class="three-pane-layout">
+                <!-- Middle Pane: Tag Cards (always visible) -->
+                <div class="middle-pane">
+                    <pl-tag-cards
+                        @tag-selected=${this._onTagSelected}
+                        .selectedTag=${this.selectedTag}
+                    ></pl-tag-cards>
+                </div>
+                <!-- Right Pane: Vaults containing the selected tag -->
+                <div class="right-pane">
+                    ${this.selectedTag
+                        ? html`<pl-vault-cards .selectedTag=${this.selectedTag}></pl-vault-cards>`
+                        : html`
+                            <div class="empty-right-pane">
+                                <pl-icon icon="vault-large-${app.effectiveTheme}" class="enormous regular icon-size"></pl-icon>
+                                <div class="lighten">${$l("Select a tag to see vaults")}</div>
+                            </div>
+                        `}
+                </div>
             </div>
         `;
     }
+
+    static styles = [
+        shared,
+        css`
+            .three-pane-layout {
+                display: flex;
+                height: 100%;
+            }
+            .middle-pane {
+                flex: 1 1 0;
+                min-width: 300px;
+                max-width: 400px;
+                border-right: 1px solid var(--border-color);
+                overflow-y: auto;
+                background: var(--color-background);
+            }
+            .right-pane {
+                flex: 2 1 0;
+                min-width: 0;
+                overflow-y: auto;
+                background: var(--color-background);
+            }
+            .empty-right-pane {
+                width: 100%;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                color: var(--color-shade-2);
+                font-size: 1.2em;
+            }
+            .lighten {
+                color: var(--watermark-text-color) !important;
+            }
+            .icon-size {
+                font-size: 500% !important;
+            }
+        `,
+    ];
 }

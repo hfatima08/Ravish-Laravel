@@ -237,6 +237,14 @@ export class TagCards extends StateMixin(LitElement) {
                 font-size: 0.9em;
                 opacity: 0.7;
             }
+
+            .lighten {
+                color: var(--watermark-text-color) !important;
+            }
+
+            .icon-size {
+                font-size: 500% !important;
+            }
         `,
     ];
 
@@ -345,10 +353,12 @@ export class TagCards extends StateMixin(LitElement) {
                     </pl-input>
                 </header>
 
-                <div class="no-results">
-                    <pl-icon icon="search" class="no-results-icon"></pl-icon>
-                    <div class="no-results-text">${$l("No tags found")}</div>
-                    <div class="no-results-subtext">${$l("Try a different search term")}</div>
+                <div class="fullbleed centering double-padded text-centering vertical layout">
+                    <pl-icon
+                        icon="search"
+                        class="enormous thin subtle lighten icon-size"
+                    ></pl-icon>
+                    <div class="lighten">${$l("Your search did not match any items.")}</div>
                 </div>
             `;
         }

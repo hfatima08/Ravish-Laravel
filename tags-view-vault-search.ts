@@ -385,11 +385,15 @@ export class TagsView extends Routing(StateMixin(View)) {
     @property()
     selectedTag: string | null = null;
 
+    @state()
+    private selectedItemId: string | null = null;
+
     @query("pl-items-list")
     private _list: ItemsList;
 
     async handleRoute([tagName]: [string]) {
         this.selectedTag = tagName || null;
+        this.selectedItemId = null;
 
         if (this.active) {
             if (tagName) {
@@ -404,6 +408,11 @@ export class TagsView extends Routing(StateMixin(View)) {
         router.go(`tags/${tag}`);
     }
 
+    private _onItemSelected(e: CustomEvent) {
+        const { id } = e.detail;
+        this.selectedItemId = id;
+    }
+
     render() {
         return html`
             <div class="fullbleed pane layout ${!!this.selectedTag ? "open" : ""}">
@@ -413,12 +422,13 @@ export class TagsView extends Routing(StateMixin(View)) {
                 ></pl-tag-cards>
 
                 <pl-items-list 
-                    .selected=${""} 
+                    .selected=${this.selectedItemId || ""}
                     .filter=${this.selectedTag ? { tag: this.selectedTag } : undefined}
                     ?hidden=${!this.selectedTag}
+                    @item-selected=${this._onItemSelected}
                 ></pl-items-list>
 
-                <pl-item-view ?hidden=${!this.selectedTag}></pl-item-view>
+                <pl-item-view .id=${this.selectedItemId || ""} ?hidden=${!this.selectedTag || !this.selectedItemId}></pl-item-view>
             </div>
         `;
     }

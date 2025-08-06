@@ -29,6 +29,9 @@ export class TagCards extends StateMixin(LitElement) {
     @state()
     private _filterShowing: boolean = false;
 
+    @state()
+    private _searchValue: string = "";
+
     @query("#filterInput")
     private _filterInput: any;
 
@@ -53,7 +56,7 @@ export class TagCards extends StateMixin(LitElement) {
             .map(([name, count]) => ({ name, count }))
             .sort((a, b) => a.name.localeCompare(b.name));
         
-        this._filteredTagCards = [...this._tagCards];
+        this._filterTags();
     }
 
     private _onTagClick(tagName: string) {
@@ -68,9 +71,10 @@ export class TagCards extends StateMixin(LitElement) {
         this._filterShowing = true;
         await this.updateComplete;
         setTimeout(() => {
-            if (val && val !== this._filterInput.value) {
+            if (val && val !== this._searchValue) {
+                this._searchValue = val;
                 this._filterInput.value = val;
-                this._filterTags(val);
+                this._filterTags();
             }
             if (focus) {
                 this._filterInput.focus();
@@ -79,19 +83,20 @@ export class TagCards extends StateMixin(LitElement) {
     }
 
     cancelSearch() {
-        if (this._filterInput?.value) {
-            this._filterInput.value = "";
-            this._filteredTagCards = [...this._tagCards];
-        }
+        this._searchValue = "";
         this._filterShowing = false;
+        if (this._filterInput) {
+            this._filterInput.value = "";
+        }
+        this._filterTags();
         this._filterInput?.blur();
     }
 
-    private _filterTags(searchTerm: string) {
-        if (!searchTerm.trim()) {
+    private _filterTags() {
+        if (!this._searchValue.trim()) {
             this._filteredTagCards = [...this._tagCards];
         } else {
-            const term = searchTerm.toLowerCase();
+            const term = this._searchValue.toLowerCase();
             this._filteredTagCards = this._tagCards.filter(tag => 
                 tag.name.toLowerCase().includes(term)
             );
@@ -99,9 +104,10 @@ export class TagCards extends StateMixin(LitElement) {
         this.requestUpdate();
     }
 
-    private _updateItems() {
-        const searchTerm = this._filterInput?.value || "";
-        this._filterTags(searchTerm);
+    private _onSearchInput(e: Event) {
+        const target = e.target as HTMLInputElement;
+        this._searchValue = target.value;
+        this._filterTags();
     }
 
     static styles = [
@@ -241,7 +247,7 @@ export class TagCards extends StateMixin(LitElement) {
     render() {
         const hasTags = this._tagCards.length > 0;
         const hasFilteredTags = this._filteredTagCards.length > 0;
-        const isSearching = this._filterShowing && this._filterInput?.value;
+        const isSearching = this._filterShowing && this._searchValue.trim();
 
         if (!hasTags) {
             return html`
@@ -278,7 +284,7 @@ export class TagCards extends StateMixin(LitElement) {
                         .placeholder=${$l("Type To Search")}
                         id="filterInput"
                         select-on-focus
-                        @input=${this._updateItems}
+                        @input=${this._onSearchInput}
                         @escape=${this.cancelSearch}
                     >
                         <pl-icon slot="before" class="left-margined left-padded subtle small" icon="search"></pl-icon>
@@ -331,7 +337,7 @@ export class TagCards extends StateMixin(LitElement) {
                     .placeholder=${$l("Type To Search")}
                     id="filterInput"
                     select-on-focus
-                    @input=${this._updateItems}
+                    @input=${this._onSearchInput}
                     @escape=${this.cancelSearch}
                 >
                     <pl-icon slot="before" class="left-margined left-padded subtle small" icon="search"></pl-icon>
@@ -344,7 +350,7 @@ export class TagCards extends StateMixin(LitElement) {
 
             ${isSearching && !hasFilteredTags
                 ? html`
-                    <div class="fullbleed centering double-padded text-centering vertical layout">
+                    <div class="no-search-results">
                         <pl-icon
                             icon="search"
                             class="enormous thin subtle lighten icon-size"

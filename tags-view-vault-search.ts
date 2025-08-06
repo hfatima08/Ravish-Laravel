@@ -267,7 +267,7 @@ export class TagCards extends StateMixin(LitElement) {
     render() {
         const hasTags = this._tagCards.length > 0;
         const hasFilteredTags = this._filteredTagCards.length > 0;
-        const isSearching = this._filterShowing && this._searchValue;
+        const isSearching = this._filterShowing && this._searchValue.trim();
 
         if (!hasTags) {
             return html`
@@ -323,59 +323,6 @@ export class TagCards extends StateMixin(LitElement) {
             `;
         }
 
-        if (isSearching && !hasFilteredTags) {
-            return html`
-                <header
-                    class="padded spacing horizontal center-aligning layout"
-                    ?hidden=${this._filterShowing}
-                >
-                    <pl-button
-                        class="transparent skinny stretch menu-button header-title"
-                        @click=${() =>
-                            this.dispatchEvent(new CustomEvent("toggle-menu", { composed: true, bubbles: true }))}
-                    >
-                        <div
-                            class="half-margined fill-horizontally horizontal spacing center-aligning layout text-left-aligning"
-                        >
-                            <pl-icon icon="tags-${app.effectiveTheme}"></pl-icon>
-                            <div class="stretch collapse ellipsis">${$l("Tags")}</div>
-                        </div>
-                    </pl-button>
-
-                    <div class="horizontal layout">
-                        <pl-button class="slim transparent" @click=${() => this.search()}>
-                            <pl-icon icon="search"></pl-icon>
-                        </pl-button>
-                    </div>
-                </header>
-
-                <header
-                    class="padded horizontal center-aligning layout"
-                    ?hidden=${!this._filterShowing}
-                >
-                    <pl-input
-                        class="slim stretch transparent"
-                        .placeholder=${$l("Type To Search")}
-                        id="filterInput"
-                        select-on-focus
-                        @input=${this._updateItems}
-                        @escape=${this.cancelSearch}
-                    >
-                        <pl-icon slot="before" class="left-margined left-padded subtle small" icon="search"></pl-icon>
-
-                        <pl-button slot="after" class="slim transparent" @click=${() => this.cancelSearch()}>
-                            <pl-icon icon="cancel"></pl-icon>
-                        </pl-button>
-                    </pl-input>
-                </header>
-
-                <div class="no-results">
-                    <pl-icon icon="search" class="no-results-icon"></pl-icon>
-                    <div class="no-results-text">${$l("Your search did not match any items.")}</div>
-                </div>
-            `;
-        }
-
         return html`
             <header
                 class="padded spacing horizontal center-aligning layout"
@@ -421,19 +368,29 @@ export class TagCards extends StateMixin(LitElement) {
                 </pl-input>
             </header>
 
-            <div class="content">
-                <div class="tags-grid">
-                    ${this._filteredTagCards.map(tag => html`
-                        <div class="tag-card" @click=${() => this._onTagClick(tag.name)}>
-                            <pl-icon icon="tag" class="tag-icon"></pl-icon>
-                            <div class="tag-info">
-                                <div class="tag-name">${tag.name}</div>
-                                <div class="tag-count">${$l("{0} items", tag.count.toString())}</div>
-                            </div>
+            ${isSearching && !hasFilteredTags
+                ? html`
+                    <div class="no-results">
+                        <pl-icon icon="search" class="no-results-icon"></pl-icon>
+                        <div class="no-results-text">${$l("Your search did not match any items.")}</div>
+                    </div>
+                `
+                : html`
+                    <div class="content">
+                        <div class="tags-grid">
+                            ${this._filteredTagCards.map(tag => html`
+                                <div class="tag-card" @click=${() => this._onTagClick(tag.name)}>
+                                    <pl-icon icon="tag" class="tag-icon"></pl-icon>
+                                    <div class="tag-info">
+                                        <div class="tag-name">${tag.name}</div>
+                                        <div class="tag-count">${$l("{0} items", tag.count.toString())}</div>
+                                    </div>
+                                </div>
+                            `)}
                         </div>
-                    `)}
-                </div>
-            </div>
+                    </div>
+                `
+            }
         `;
     }
 }

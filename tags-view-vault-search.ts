@@ -12,6 +12,7 @@ import { shared } from "../styles";
 import "./icon";
 import "./button";
 import "./input";
+import "./virtual-list";
 
 interface TagCard {
     name: string;
@@ -457,6 +458,19 @@ export class VaultCards extends StateMixin(LitElement) {
         }));
     }
 
+    private _renderVaultCard(vault: VaultCard, index: number) {
+        return html`
+            <div class="vault-item" @click=${() => this._onVaultClick(vault.id)}>
+                <pl-icon icon="vault" class="vault-icon"></pl-icon>
+                <div class="vault-info">
+                    <div class="vault-name">${vault.name}</div>
+                    <div class="vault-count">${$l("{0} items", vault.itemCount.toString())}</div>
+                </div>
+                <pl-icon icon="chevron-right" class="vault-arrow"></pl-icon>
+            </div>
+        `;
+    }
+
     static styles = [
         shared,
         css`
@@ -554,6 +568,13 @@ export class VaultCards extends StateMixin(LitElement) {
                 font-size: 0.9em;
                 opacity: 0.7;
             }
+
+            pl-virtual-list {
+                width: 90%;
+                min-height: 124px;
+                margin: 0 auto;
+                border-radius: 8px;
+            }
         `,
     ];
 
@@ -580,18 +601,12 @@ export class VaultCards extends StateMixin(LitElement) {
 
         return html`
             <div class="content">
-                <ul class="vault-list">
-                    ${this._vaultCards.map(vault => html`
-                        <li class="vault-item" @click=${() => this._onVaultClick(vault.id)}>
-                            <pl-icon icon="vault" class="vault-icon"></pl-icon>
-                            <div class="vault-info">
-                                <div class="vault-name">${vault.name}</div>
-                                <div class="vault-count">${$l("{0} items", vault.itemCount.toString())}</div>
-                            </div>
-                            <pl-icon icon="chevron-right" class="vault-arrow"></pl-icon>
-                        </li>
-                    `)}
-                </ul>
+                <pl-virtual-list
+                    .data=${this._vaultCards}
+                    .itemHeight=${80}
+                    .renderItem=${this._renderVaultCard.bind(this)}
+                    .guard=${(vault: VaultCard) => [vault.id, vault.name, vault.itemCount]}
+                ></pl-virtual-list>
             </div>
         `;
     }

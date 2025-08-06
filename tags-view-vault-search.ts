@@ -469,39 +469,37 @@ export class VaultCards extends StateMixin(LitElement) {
 
             .content {
                 flex: 1;
-                padding: 1em;
                 overflow-y: auto;
             }
 
-            .vaults-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-                gap: 1em;
-                padding: 0.5em;
+            .vault-list {
+                list-style: none;
+                margin: 0;
+                padding: 0;
             }
 
-            .vault-card {
-                background: var(--color-background);
-                border: 1px solid var(--border-color);
-                border-radius: 8px;
-                padding: 1em;
-                cursor: pointer;
-                transition: all 0.2s ease;
+            .vault-item {
                 display: flex;
                 align-items: center;
-                gap: 0.5em;
+                padding: 1em;
+                border-bottom: 1px solid var(--border-color);
+                cursor: pointer;
+                transition: background-color 0.2s ease;
             }
 
-            .vault-card:hover {
+            .vault-item:hover {
                 background: var(--color-shade-1);
-                border-color: var(--color-highlight);
-                transform: translateY(-2px);
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            .vault-item:last-child {
+                border-bottom: none;
             }
 
             .vault-icon {
                 color: var(--color-highlight);
-                font-size: 1.2em;
+                font-size: 1.5em;
+                margin-right: 1em;
+                flex-shrink: 0;
             }
 
             .vault-info {
@@ -521,6 +519,13 @@ export class VaultCards extends StateMixin(LitElement) {
             .vault-count {
                 font-size: 0.9em;
                 color: var(--color-shade-2);
+            }
+
+            .vault-arrow {
+                color: var(--color-shade-2);
+                font-size: 1.2em;
+                margin-left: 0.5em;
+                flex-shrink: 0;
             }
 
             .no-vaults {
@@ -575,17 +580,18 @@ export class VaultCards extends StateMixin(LitElement) {
 
         return html`
             <div class="content">
-                <div class="vaults-grid">
+                <ul class="vault-list">
                     ${this._vaultCards.map(vault => html`
-                        <div class="vault-card" @click=${() => this._onVaultClick(vault.id)}>
+                        <li class="vault-item" @click=${() => this._onVaultClick(vault.id)}>
                             <pl-icon icon="vault" class="vault-icon"></pl-icon>
                             <div class="vault-info">
                                 <div class="vault-name">${vault.name}</div>
                                 <div class="vault-count">${$l("{0} items", vault.itemCount.toString())}</div>
                             </div>
-                        </div>
+                            <pl-icon icon="chevron-right" class="vault-arrow"></pl-icon>
+                        </li>
                     `)}
-                </div>
+                </ul>
             </div>
         `;
     }

@@ -71,7 +71,9 @@ export class TagCards extends StateMixin(LitElement) {
         setTimeout(() => {
             if (val && val !== this._searchValue) {
                 this._searchValue = val;
-                if (this._filterInput) this._filterInput.value = val;
+                if (this._filterInput) {
+                    this._filterInput.value = val;
+                }
                 this._filterTags();
             } else if (this._filterInput) {
                 this._filterInput.value = this._searchValue;
@@ -89,7 +91,9 @@ export class TagCards extends StateMixin(LitElement) {
             this._filterInput.value = "";
         }
         this._filterTags();
-        this._filterInput?.blur();
+        if (this._filterInput) {
+            this._filterInput.blur();
+        }
     }
 
     private _filterTags() {
@@ -105,8 +109,10 @@ export class TagCards extends StateMixin(LitElement) {
     }
 
     private _updateItems() {
-        this._searchValue = this._filterInput?.value || "";
-        this._filterTags();
+        if (this._filterInput) {
+            this._searchValue = this._filterInput.value || "";
+            this._filterTags();
+        }
     }
 
     static styles = [
@@ -126,6 +132,16 @@ export class TagCards extends StateMixin(LitElement) {
 
             .header-icon {
                 height: 1.3em;
+            }
+
+            pl-input {
+                border: 1px solid var(--border-color);
+                border-radius: 4px;
+                background: var(--color-background);
+            }
+
+            pl-input:focus-within {
+                border-color: var(--color-highlight);
             }
 
             .content {

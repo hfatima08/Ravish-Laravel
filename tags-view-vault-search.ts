@@ -18,12 +18,6 @@ interface TagCard {
     count: number;
 }
 
-interface VaultCard {
-    id: string;
-    name: string;
-    itemCount: number;
-}
-
 @customElement("pl-tag-cards")
 export class TagCards extends StateMixin(LitElement) {
     @state()
@@ -412,41 +406,39 @@ export class TagCards extends StateMixin(LitElement) {
 @customElement("pl-vault-cards")
 export class VaultCards extends StateMixin(LitElement) {
     @state()
-    private _vaultCards: VaultCard[] = [];
+    private _vaults: any[] = [];
 
     @property()
     selectedTag: string | null = null;
 
     async stateChanged() {
-        this._updateVaultCards();
+        this._updateVaults();
     }
 
-    private _updateVaultCards() {
+    private _updateVaults() {
         if (!this.selectedTag) {
-            this._vaultCards = [];
+            this._vaults = [];
             return;
         }
+        // Get all vaults that have at least one item with the selected tag
+        this._vaults = this.state.vaults.filter(vault =>
+            vault.items.some(item => item.tags.includes(this.selectedTag!))
+        );
+    }
 
-        const vaultsWithTag: VaultCard[] = [];
-        
-        for (const vault of this.state.vaults) {
-            let itemCount = 0;
-            for (const item of vault.items) {
-                if (item.tags.includes(this.selectedTag!)) {
-                    itemCount++;
-                }
-            }
-            
-            if (itemCount > 0) {
-                vaultsWithTag.push({
-                    id: vault.id,
-                    name: vault.name,
-                    itemCount: itemCount
-                });
-            }
-        }
-
-        this._vaultCards = vaultsWithTag.sort((a, b) => a.name.localeCompare(b.name));
+    private _renderVault(vault: any, index: number) {
+        // This should match the render logic for vaults in the all vaults view
+        return html`
+            <div class="list-item center-aligning horizontal layout" @click=${() => this._onVaultClick(vault.id)}>
+                <div class="fullbleed click" style="border-radius: inherit"></div>
+                <pl-icon icon="vault" class="vault-icon"></pl-icon>
+                <div class="vault-info stretch collapse">
+                    <div class="vault-name ellipsis semibold">${vault.name}</div>
+                    <div class="vault-meta tiny subtle">${vault.items.length} items</div>
+                </div>
+                <pl-icon icon="chevron-right" class="vault-arrow"></pl-icon>
+            </div>
+        `;
     }
 
     private _onVaultClick(vaultId: string) {
@@ -455,19 +447,6 @@ export class VaultCards extends StateMixin(LitElement) {
             bubbles: true,
             composed: true 
         }));
-    }
-
-    private _renderVaultCard(vault: VaultCard, index: number) {
-        return html`
-            <div class="vault-item" @click=${() => this._onVaultClick(vault.id)}>
-                <pl-icon icon="vault" class="vault-icon"></pl-icon>
-                <div class="vault-info">
-                    <div class="vault-name">${vault.name}</div>
-                    <div class="vault-count">${$l("{0} items", vault.itemCount.toString())}</div>
-                </div>
-                <pl-icon icon="chevron-right" class="vault-arrow"></pl-icon>
-            </div>
-        `;
     }
 
     static styles = [
@@ -479,47 +458,33 @@ export class VaultCards extends StateMixin(LitElement) {
                 height: 100%;
                 background: var(--color-background);
             }
-
             .content {
                 flex: 1;
                 overflow-y: auto;
             }
-
-            .vault-list {
-                list-style: none;
-                margin: 0;
-                padding: 0;
-            }
-
-            .vault-item {
+            .list-item {
+                background: #FAFAFB;
+                overflow: hidden;
+                border-radius: 8px;
+                margin-bottom: 24px;
                 display: flex;
                 align-items: center;
-                padding: 1em;
-                border-bottom: 1px solid var(--border-color);
                 cursor: pointer;
                 transition: background-color 0.2s ease;
             }
-
-            .vault-item:hover {
+            .list-item:hover {
                 background: var(--color-shade-1);
             }
-
-            .vault-item:last-child {
-                border-bottom: none;
-            }
-
             .vault-icon {
                 color: var(--color-highlight);
                 font-size: 1.5em;
-                margin-right: 1em;
+                margin: 0 1em 0 0.5em;
                 flex-shrink: 0;
             }
-
             .vault-info {
                 flex: 1;
                 min-width: 0;
             }
-
             .vault-name {
                 font-weight: 500;
                 color: var(--color-foreground);
@@ -528,19 +493,16 @@ export class VaultCards extends StateMixin(LitElement) {
                 text-overflow: ellipsis;
                 white-space: nowrap;
             }
-
-            .vault-count {
+            .vault-meta {
                 font-size: 0.9em;
                 color: var(--color-shade-2);
             }
-
             .vault-arrow {
                 color: var(--color-shade-2);
                 font-size: 1.2em;
                 margin-left: 0.5em;
                 flex-shrink: 0;
             }
-
             .no-vaults {
                 display: flex;
                 flex-direction: column;
@@ -551,23 +513,19 @@ export class VaultCards extends StateMixin(LitElement) {
                 text-align: center;
                 padding: 2em;
             }
-
             .no-vaults-icon {
                 font-size: 4em;
                 margin-bottom: 1em;
                 opacity: 0.5;
             }
-
             .no-vaults-text {
                 font-size: 1.1em;
                 margin-bottom: 0.5em;
             }
-
             .no-vaults-subtext {
                 font-size: 0.9em;
                 opacity: 0.7;
             }
-
             pl-virtual-list {
                 width: 90%;
                 min-height: 124px;
@@ -587,8 +545,7 @@ export class VaultCards extends StateMixin(LitElement) {
                 </div>
             `;
         }
-
-        if (this._vaultCards.length === 0) {
+        if (this._vaults.length === 0) {
             return html`
                 <div class="no-vaults">
                     <pl-icon icon="vault" class="no-vaults-icon"></pl-icon>
@@ -597,14 +554,13 @@ export class VaultCards extends StateMixin(LitElement) {
                 </div>
             `;
         }
-
         return html`
             <div class="content">
                 <pl-virtual-list
-                    .data=${this._vaultCards}
+                    .data=${this._vaults}
                     .itemHeight=${80}
-                    .renderItem=${this._renderVaultCard.bind(this)}
-                    .guard=${(vault: VaultCard) => [vault.id, vault.name, vault.itemCount]}
+                    .renderItem=${this._renderVault.bind(this)}
+                    .guard=${(vault: any) => [vault.id, vault.name, vault.items.length]}
                 ></pl-virtual-list>
             </div>
         `;

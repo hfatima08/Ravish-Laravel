@@ -615,52 +615,59 @@ export class TagsView extends Routing(StateMixin(View)) {
     @property()
     selectedTag: string | null = null;
 
-    @state()
-    private selectedItemId: string | null = null;
-
-    async handleRoute([tagName]: [string]) {
-        this.selectedTag = tagName || null;
-        this.selectedItemId = null;
-
-        if (this.active) {
-            if (tagName) {
-                // this._list?.cancelSearch(); // This line was removed as per the edit hint.
-            }
-        }
-    }
-
-    private _onTagSelected(e: CustomEvent) {
-        const { tag } = e.detail;
-        router.go(`tags/${tag}`);
-    }
-
-    private _onItemSelected(e: CustomEvent) {
-        const { id } = e.detail;
-        this.selectedItemId = id;
-    }
-
-    private _onVaultSelected(e: CustomEvent) {
-        const { vaultId } = e.detail;
-        // Navigate to the vault view
-        router.go(`items/${vaultId}`);
-    }
-
     render() {
         return html`
-            <div class="fullbleed pane layout ${!!this.selectedTag ? "open" : ""}">
-                <pl-tag-cards 
-                    .selectedTag=${this.selectedTag}
-                    @tag-selected=${this._onTagSelected}
-                ></pl-tag-cards>
+            <div class="fullbleed pane layout">
+                <!-- Middle Pane: Tag Cards -->
+                <div class="middle-pane">
+                    <pl-tag-cards 
+                        .selectedTag=${this.selectedTag}
+                        @tag-selected=${(e: CustomEvent) => {
+                            const { tag } = e.detail;
+                            this.selectedTag = tag;
+                        }}
+                    ></pl-tag-cards>
+                </div>
 
-                <pl-vault-cards
-                    .selectedTag=${this.selectedTag}
-                    @vault-selected=${this._onVaultSelected}
-                    ?hidden=${!this.selectedTag}
-                ></pl-vault-cards>
-
-                <pl-item-view .id=${this.selectedItemId || ""} ?hidden=${!this.selectedItemId}></pl-item-view>
+                <!-- Right Pane: Vault Cards for selected tag -->
+                <div class="right-pane">
+                    ${this.selectedTag
+                        ? html`<pl-vault-cards .selectedTag=${this.selectedTag}></pl-vault-cards>`
+                        : html`<div class="empty-right-pane"></div>`}
+                </div>
             </div>
         `;
     }
+
+    static styles = [
+        css`
+            .fullbleed.pane.layout {
+                display: flex;
+                height: 100%;
+            }
+            .middle-pane {
+                flex: 1 1 0;
+                min-width: 300px;
+                max-width: 400px;
+                border-right: 1px solid var(--border-color);
+                overflow-y: auto;
+                background: var(--color-background);
+            }
+            .right-pane {
+                flex: 2 1 0;
+                min-width: 0;
+                overflow-y: auto;
+                background: var(--color-background);
+            }
+            .empty-right-pane {
+                width: 100%;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: var(--color-shade-2);
+                font-size: 1.2em;
+            }
+        `
+    ];
 }

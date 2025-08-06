@@ -41,6 +41,9 @@ export class TagCards extends StateMixin(LitElement) {
     @property()
     selectedTag: string | null = null;
 
+    @query("#filterInput")
+    private _filterInput: any;
+
     async stateChanged() {
         this._updateTagCards();
     }

@@ -18,6 +18,12 @@ interface TagCard {
     count: number;
 }
 
+interface VaultCard {
+    id: string;
+    name: string;
+    itemCount: number;
+}
+
 @customElement("pl-tag-cards")
 export class TagCards extends StateMixin(LitElement) {
     @state()
@@ -31,6 +37,9 @@ export class TagCards extends StateMixin(LitElement) {
 
     @state()
     private _searchValue: string = "";
+
+    @property()
+    selectedTag: string | null = null;
 
     @query("#filterInput")
     private _filterInput: any;
@@ -159,6 +168,25 @@ export class TagCards extends StateMixin(LitElement) {
                 border-color: var(--color-highlight);
                 transform: translateY(-2px);
                 box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            .tag-card.selected {
+                background: var(--color-highlight);
+                border-color: var(--color-highlight);
+                color: var(--color-background);
+            }
+
+            .tag-card.selected .tag-icon {
+                color: var(--color-background);
+            }
+
+            .tag-card.selected .tag-name {
+                color: var(--color-background);
+            }
+
+            .tag-card.selected .tag-count {
+                color: var(--color-background);
+                opacity: 0.8;
             }
 
             .tag-icon {
@@ -362,7 +390,10 @@ export class TagCards extends StateMixin(LitElement) {
                     <div class="content">
                         <div class="tags-grid">
                             ${this._filteredTagCards.map(tag => html`
-                                <div class="tag-card" @click=${() => this._onTagClick(tag.name)}>
+                                <div 
+                                    class="tag-card ${this.selectedTag === tag.name ? 'selected' : ''}" 
+                                    @click=${() => this._onTagClick(tag.name)}
+                                >
                                     <pl-icon icon="tag" class="tag-icon"></pl-icon>
                                     <div class="tag-info">
                                         <div class="tag-name">${tag.name}</div>
@@ -374,6 +405,188 @@ export class TagCards extends StateMixin(LitElement) {
                     </div>
                 `
             }
+        `;
+    }
+}
+
+@customElement("pl-vault-cards")
+export class VaultCards extends StateMixin(LitElement) {
+    @state()
+    private _vaultCards: VaultCard[] = [];
+
+    @property()
+    selectedTag: string | null = null;
+
+    async stateChanged() {
+        this._updateVaultCards();
+    }
+
+    private _updateVaultCards() {
+        if (!this.selectedTag) {
+            this._vaultCards = [];
+            return;
+        }
+
+        const vaultsWithTag: VaultCard[] = [];
+        
+        for (const vault of this.state.vaults) {
+            let itemCount = 0;
+            for (const item of vault.items) {
+                if (item.tags.includes(this.selectedTag!)) {
+                    itemCount++;
+                }
+            }
+            
+            if (itemCount > 0) {
+                vaultsWithTag.push({
+                    id: vault.id,
+                    name: vault.name,
+                    itemCount: itemCount
+                });
+            }
+        }
+
+        this._vaultCards = vaultsWithTag.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    private _onVaultClick(vaultId: string) {
+        this.dispatchEvent(new CustomEvent("vault-selected", { 
+            detail: { vaultId },
+            bubbles: true,
+            composed: true 
+        }));
+    }
+
+    static styles = [
+        shared,
+        css`
+            :host {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                background: var(--color-background);
+            }
+
+            .content {
+                flex: 1;
+                padding: 1em;
+                overflow-y: auto;
+            }
+
+            .vaults-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 1em;
+                padding: 0.5em;
+            }
+
+            .vault-card {
+                background: var(--color-background);
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
+                padding: 1em;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                display: flex;
+                align-items: center;
+                gap: 0.5em;
+            }
+
+            .vault-card:hover {
+                background: var(--color-shade-1);
+                border-color: var(--color-highlight);
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            .vault-icon {
+                color: var(--color-highlight);
+                font-size: 1.2em;
+            }
+
+            .vault-info {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .vault-name {
+                font-weight: 500;
+                color: var(--color-foreground);
+                margin-bottom: 0.25em;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .vault-count {
+                font-size: 0.9em;
+                color: var(--color-shade-2);
+            }
+
+            .no-vaults {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100%;
+                color: var(--color-shade-2);
+                text-align: center;
+                padding: 2em;
+            }
+
+            .no-vaults-icon {
+                font-size: 4em;
+                margin-bottom: 1em;
+                opacity: 0.5;
+            }
+
+            .no-vaults-text {
+                font-size: 1.1em;
+                margin-bottom: 0.5em;
+            }
+
+            .no-vaults-subtext {
+                font-size: 0.9em;
+                opacity: 0.7;
+            }
+        `,
+    ];
+
+    render() {
+        if (!this.selectedTag) {
+            return html`
+                <div class="no-vaults">
+                    <pl-icon icon="vault" class="no-vaults-icon"></pl-icon>
+                    <div class="no-vaults-text">${$l("Select a tag to see vaults")}</div>
+                    <div class="no-vaults-subtext">${$l("Click on a tag to view vaults containing items with that tag")}</div>
+                </div>
+            `;
+        }
+
+        if (this._vaultCards.length === 0) {
+            return html`
+                <div class="no-vaults">
+                    <pl-icon icon="vault" class="no-vaults-icon"></pl-icon>
+                    <div class="no-vaults-text">${$l("No vaults found")}</div>
+                    <div class="no-vaults-subtext">${$l("No vaults contain items with the selected tag")}</div>
+                </div>
+            `;
+        }
+
+        return html`
+            <div class="content">
+                <div class="vaults-grid">
+                    ${this._vaultCards.map(vault => html`
+                        <div class="vault-card" @click=${() => this._onVaultClick(vault.id)}>
+                            <pl-icon icon="vault" class="vault-icon"></pl-icon>
+                            <div class="vault-info">
+                                <div class="vault-name">${vault.name}</div>
+                                <div class="vault-count">${$l("{0} items", vault.itemCount.toString())}</div>
+                            </div>
+                        </div>
+                    `)}
+                </div>
+            </div>
         `;
     }
 }
@@ -397,7 +610,6 @@ export class TagsView extends Routing(StateMixin(View)) {
 
         if (this.active) {
             if (tagName) {
-                // If a tag is selected, show items for that tag
                 this._list?.cancelSearch();
             }
         }
@@ -413,22 +625,27 @@ export class TagsView extends Routing(StateMixin(View)) {
         this.selectedItemId = id;
     }
 
+    private _onVaultSelected(e: CustomEvent) {
+        const { vaultId } = e.detail;
+        // Navigate to the vault view
+        router.go(`items/${vaultId}`);
+    }
+
     render() {
         return html`
             <div class="fullbleed pane layout ${!!this.selectedTag ? "open" : ""}">
                 <pl-tag-cards 
+                    .selectedTag=${this.selectedTag}
                     @tag-selected=${this._onTagSelected}
-                    ?hidden=${!!this.selectedTag}
                 ></pl-tag-cards>
 
-                <pl-items-list 
-                    .selected=${this.selectedItemId || ""}
-                    .filter=${this.selectedTag ? { tag: this.selectedTag } : undefined}
+                <pl-vault-cards
+                    .selectedTag=${this.selectedTag}
+                    @vault-selected=${this._onVaultSelected}
                     ?hidden=${!this.selectedTag}
-                    @item-selected=${this._onItemSelected}
-                ></pl-items-list>
+                ></pl-vault-cards>
 
-                <pl-item-view .id=${this.selectedItemId || ""} ?hidden=${!this.selectedTag || !this.selectedItemId}></pl-item-view>
+                <pl-item-view .id=${this.selectedItemId || ""} ?hidden=${!this.selectedItemId}></pl-item-view>
             </div>
         `;
     }

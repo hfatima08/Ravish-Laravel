@@ -109,12 +109,6 @@ export class TagCards extends StateMixin(LitElement) {
         this._filterTags();
     }
 
-    private _onSearchInput(e: Event) {
-        const target = e.target as HTMLInputElement;
-        this._searchValue = target.value;
-        this._filterTags();
-    }
-
     static styles = [
         shared,
         css`

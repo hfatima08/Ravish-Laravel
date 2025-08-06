@@ -1,9 +1,8 @@
 import { View } from "./view";
 import { StateMixin } from "../mixins/state";
 import { Routing } from "../mixins/routing";
-import { ItemsList } from "./items-list";
 import "./item-view";
-import { customElement, property, query, state } from "lit/decorators.js";
+import { customElement, property, state } from "lit/decorators.js";
 import { html, css, LitElement } from "lit";
 import { router } from "../globals";
 import { translate as $l } from "@padloc/locale/src/translate";
@@ -41,9 +40,6 @@ export class TagCards extends StateMixin(LitElement) {
 
     @property()
     selectedTag: string | null = null;
-
-    @query("#filterInput")
-    private _filterInput: any;
 
     async stateChanged() {
         this._updateTagCards();
@@ -622,16 +618,13 @@ export class TagsView extends Routing(StateMixin(View)) {
     @state()
     private selectedItemId: string | null = null;
 
-    @query("pl-items-list")
-    private _list: ItemsList;
-
     async handleRoute([tagName]: [string]) {
         this.selectedTag = tagName || null;
         this.selectedItemId = null;
 
         if (this.active) {
             if (tagName) {
-                this._list?.cancelSearch();
+                // this._list?.cancelSearch(); // This line was removed as per the edit hint.
             }
         }
     }

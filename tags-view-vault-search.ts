@@ -44,8 +44,6 @@ export class TagCards extends StateMixin(LitElement) {
 
     private _updateTagCards() {
         const tagCounts = new Map<string, number>();
-        
-        // Count items for each tag across all vaults
         for (const vault of this.state.vaults) {
             for (const item of vault.items) {
                 for (const tag of item.tags) {
@@ -53,12 +51,9 @@ export class TagCards extends StateMixin(LitElement) {
                 }
             }
         }
-
-        // Convert to array and sort alphabetically
         this._tagCards = Array.from(tagCounts.entries())
             .map(([name, count]) => ({ name, count }))
             .sort((a, b) => a.name.localeCompare(b.name));
-        
         this._filterTags();
     }
 
@@ -107,6 +102,10 @@ export class TagCards extends StateMixin(LitElement) {
             );
         }
         this.requestUpdate();
+    }
+
+    private _updateItems() {
+        this._filterTags();
     }
 
     private _onSearchInput(e: Event) {

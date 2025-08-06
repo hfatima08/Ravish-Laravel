@@ -76,10 +76,12 @@ export class TagCards extends StateMixin(LitElement) {
         setTimeout(() => {
             if (val && val !== this._searchValue) {
                 this._searchValue = val;
-                this._filterInput.value = val;
+                if (this._filterInput) this._filterInput.value = val;
                 this._filterTags();
+            } else if (this._filterInput) {
+                this._filterInput.value = this._searchValue;
             }
-            if (focus) {
+            if (focus && this._filterInput) {
                 this._filterInput.focus();
             }
         }, 100);

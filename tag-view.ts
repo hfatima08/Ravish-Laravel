@@ -1,7 +1,6 @@
 import { View } from "./view";
 import { StateMixin } from "../mixins/state";
 import { Routing } from "../mixins/routing";
-import { ItemsList } from "./items-list";
 import "./item-view";
 import { customElement, query, state } from "lit/decorators.js";
 import { html, css } from "lit";
@@ -27,17 +26,14 @@ export class TagsView extends Routing(StateMixin(View)) {
     @state()
     private _selectedItemId: string | null = null;
 
-    @query("pl-items-list")
-    private _itemsList: ItemsList;
+
 
     async handleRoute([tagName, itemId]: [string, string]) {
         this._selectedTag = tagName || null;
         this._selectedItemId = itemId || null;
 
         if (this.active) {
-            if (this._selectedTag && !this._selectedItemId) {
-                this._itemsList?.cancelSearch();
-            }
+            // Handle route changes
         }
     }
 
@@ -46,14 +42,9 @@ export class TagsView extends Routing(StateMixin(View)) {
         router.go(`tags/${tag}`);
     }
 
-    private _onItemSelected(e: CustomEvent) {
-        const { itemId } = e.detail;
-        router.go(`tags/${this._selectedTag}/${itemId}`);
-    }
-
     private _getVaultsWithTag(tagName: string) {
         return this.state.vaults.filter(vault => 
-            vault.items.some(item => item.tags.includes(tagName))
+            vault.items.some((item: any) => item.tags.includes(tagName))
         );
     }
 
@@ -65,7 +56,7 @@ export class TagsView extends Routing(StateMixin(View)) {
     render() {
         const hasTagSelected = !!this._selectedTag;
         const hasItemSelected = !!this._selectedItemId;
-        const vaultsWithTag = hasTagSelected ? this._getVaultsWithTag(this._selectedTag!) : [];
+        const vaultsWithTag = hasTagSelected && this._selectedTag ? this._getVaultsWithTag(this._selectedTag) : [];
             
         return html`
             <div class="fullbleed pane layout ${hasItemSelected ? "open" : ""}">
@@ -101,7 +92,7 @@ export class TagsView extends Routing(StateMixin(View)) {
                                                         <div class="vault-name">${vault.name}</div>
                                                         <div class="vault-count">
                                                             ${$l("{0} items with this tag", 
-                                                                vault.items.filter(item => item.tags.includes(this._selectedTag!)).length.toString()
+                                                                vault.items.filter((item: any) => item.tags.includes(this._selectedTag!)).length.toString()
                                                             )}
                                                         </div>
                                                     </div>

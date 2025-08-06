@@ -574,21 +574,22 @@ export class TagsView extends Routing(StateMixin(View)) {
     @property()
     selectedTag: string | null = null;
 
+    private _onTagSelected(e: CustomEvent) {
+        const { tag } = e.detail;
+        this.selectedTag = tag;
+    }
+
     render() {
         return html`
-            <div class="fullbleed pane layout">
-                <!-- Middle Pane: Tag Cards -->
+            <div class="three-pane-layout">
+                <!-- Middle Pane: Tag Cards (always visible) -->
                 <div class="middle-pane">
                     <pl-tag-cards 
+                        @tag-selected=${this._onTagSelected}
                         .selectedTag=${this.selectedTag}
-                        @tag-selected=${(e: CustomEvent) => {
-                            const { tag } = e.detail;
-                            this.selectedTag = tag;
-                        }}
                     ></pl-tag-cards>
                 </div>
-
-                <!-- Right Pane: Vault Cards for selected tag -->
+                <!-- Right Pane: Vaults containing the selected tag -->
                 <div class="right-pane">
                     ${this.selectedTag
                         ? html`<pl-vault-cards .selectedTag=${this.selectedTag}></pl-vault-cards>`
@@ -600,7 +601,7 @@ export class TagsView extends Routing(StateMixin(View)) {
 
     static styles = [
         css`
-            .fullbleed.pane.layout {
+            .three-pane-layout {
                 display: flex;
                 height: 100%;
             }
